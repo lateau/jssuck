@@ -1,6 +1,6 @@
 {
   "name": "jssuck",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "JSSuck - JSFuck encoder/decoder",
   "repository": {
     "type": "git",
@@ -22,7 +22,7 @@
     }
   ],
   "bin": {
-    "jsfuck": "bin/jssuck"
+    "jssuck": "bin/jssuck"
   },
   "main": "lib/jssuck.js",
   "dependencies": {

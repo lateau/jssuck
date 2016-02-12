@@ -19,4 +19,10 @@ Output:
 -s: Store the result in each files. Default is stdout.
 ```
 
+## Installation
+
+```sh
+$ npm install jssuck
+```
+
 [1]: http://www.jsfuck.com
