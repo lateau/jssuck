@@ -1,30 +1,35 @@
-;;;; src/suck.ls
-;;; Exports user functions of jssuck.
+;;;; src/jssuck.ls
+;;; Main script of JSSuck.
 
 ((function ()
-  (var fs (require 'fs')
+  (var path (require 'path')
+       fs (require 'fs')
        decode (require './unfuck.js')
        encode (require './fuck.js'))
 
-  (var jssuck
-   {encode: encode,
-    decode: decode})
-
-  ;; TODO: pretty print
-  ;; TODO: save
-  (var print
-   (function (data pretty save)
-    (console.log data)
-    (console.log '\n')
-   )
-  )
+  (var print_or_save
+   (function (data filepath pretty save fuck_or_unfuck)
+    (if save
+     (do
+      (var dirname (path.dirname filepath)
+           basename (path.basename filepath '.js')
+           extname (path.extname filepath)
+           newpath (+ dirname '/' basename '.' fuck_or_unfuck extname))
+      (fs.writeFile newpath data
+       (function (err)
+        (console.log (+ 'Writing ' newpath))
+        (when err
+         (console.error (+ "ERROR: Couldn't save " newpath '\n'))))))
+     (do
+      (console.log data)
+      (console.log '\n')))))
 
   (var autorun
    (function (argv)
     (when (< argv.length 3)
      (var message (+ "Usage: jssuck [OPTION]... [FILE]...\n\n"
                    "JSSuck takes multiple files and both directions at once.\n"
-                   "Just put the files what you do encode or decode.\n\n"
+                   "Just put the files that you want to do encode or decode.\n\n"
                    "Encoding:\n"
                    "  -1: Process jsfuck [DEFAULT]\n"
                    "  -2: Process uglified jsfuck.\n"
@@ -40,7 +45,8 @@
     (argv.shift) (argv.shift)
     (each argv
      (function (arg index list)
-      (cond (= '-2' arg) (set options['lv2'] true)
+      (cond (= '-1' arg) (set options['lv1'] true)
+            (= '-2' arg) (set options['lv2'] true)
             (= '-p' arg) (set options['pretty'] true)
             (= '-s' arg) (set options['save'] true)
             true (do
@@ -51,16 +57,16 @@
     (each options['files']
      (function (file index list)
       (var data (fs.readFileSync(file, 'utf8')))
-      (if (= 0 (data.search /[^()\[\]+!]/))
-       (print
-        (encode data (= options['lv1'] options['lv2']))
-        false options['save'])
-       (print
+      (if (= -1 (-> (data.replace /\s+/g '') (.search /[^()\[\]+!]/)))
+       (print_or_save
         (decode data options['pretty'])
-        options['pretty'] options['save']))))
-    )
-  )
+        file options['pretty'] options['save'] 'unfuck')
+       (print_or_save
+        (encode data (= options['lv1'] options['lv2']))
+        file false options['save'] 'fuck'))))))
 
-  (set jssuck['autorun'] autorun)
-  (set module.exports jssuck)
-))
+  (var jssuck
+   {encode: encode,
+    decode: decode,
+    autorun: autorun})
+  (set module.exports jssuck)))
